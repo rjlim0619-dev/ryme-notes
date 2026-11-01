@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ryme Notes</title>
-<meta name="theme-color" content="#0b1630">
-<script>(function(){var t='dark';try{t=localStorage.getItem('rymeNotes.theme')||'dark'}catch(e){}document.documentElement.dataset.theme=t})()</script>
+<meta name="theme-color" content="#050b1d">
+<script>(function(){var t='dark';try{t=localStorage.getItem('rymeNotes.theme2')||'dark'}catch(e){}document.documentElement.dataset.theme=t})()</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23a29bfe'/%3E%3Cstop offset='1' stop-color='%235b4cf0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -174,34 +174,34 @@ h2{font-size:19px;font-weight:700}
 
 /* ===== NAVY DARK THEME ===== */
 html[data-theme=dark]{color-scheme:dark;
-  --bg:#0b1630; --panel:#12214a; --line:#22346a; --text:#e8edff; --muted:#8e9cc4; --soft:#5d6c99;
+  --bg:#050b1d; --panel:#0a1631; --line:#16264d; --text:#e8edff; --muted:#7f8db5; --soft:#4d5b85;
 }
-html[data-theme=dark] body{background:linear-gradient(135deg,#061024 0%,#0d1d47 55%,#1b2a6b 100%)}
+html[data-theme=dark] body{background:linear-gradient(135deg,#02060f 0%,#060f28 55%,#0c1a45 100%)}
 html[data-theme=dark] .app{box-shadow:0 30px 80px rgba(0,0,20,.6)}
-html[data-theme=dark] .side{background:#0e1b3d;border-right:1px solid #1a2a58}
+html[data-theme=dark] .side{background:#071027;border-right:1px solid #111f42}
 html[data-theme=dark] .nav,html[data-theme=dark] .themesw{color:#aab6da}
 html[data-theme=dark] .nav:hover{color:#8fa2ff}
 html[data-theme=dark] .nav.active{color:#fff}
 html[data-theme=dark] .nav.active::before{background:#6d7dff;box-shadow:0 0 10px #6d7dff}
-html[data-theme=dark] .nbnav .count{background:#1a2a58;color:#aab6da}
+html[data-theme=dark] .nbnav .count{background:#12214a;color:#aab6da}
 html[data-theme=dark] .themesw .knob{background:#5b5ff0}
 html[data-theme=dark] .themesw .knob::after{left:18px}
 html[data-theme=dark] .search,html[data-theme=dark] .iconbtn,html[data-theme=dark] .ghost,html[data-theme=dark] .tab:not(.on),
 html[data-theme=dark] .col,html[data-theme=dark] .planner,html[data-theme=dark] .notelist,html[data-theme=dark] .editor,
 html[data-theme=dark] .rnote,html[data-theme=dark] .sheet{background:var(--panel);border-color:var(--line);color:var(--text)}
-html[data-theme=dark] .col,html[data-theme=dark] .planner,html[data-theme=dark] .notelist,html[data-theme=dark] .editor,html[data-theme=dark] .rnote{border:1px solid #1d2e5e}
-html[data-theme=dark] .nb.add{background:transparent;border-color:#2a3d78;color:var(--muted)}
+html[data-theme=dark] .col,html[data-theme=dark] .planner,html[data-theme=dark] .notelist,html[data-theme=dark] .editor,html[data-theme=dark] .rnote{border:1px solid #13234a}
+html[data-theme=dark] .nb.add{background:transparent;border-color:#1c2e5c;color:var(--muted)}
 html[data-theme=dark] .task{color:#c6d0ee}
-html[data-theme=dark] .task:hover,html[data-theme=dark] .noteitem:hover{background:#18295a}
-html[data-theme=dark] .noteitem.sel{background:#1e2f68}
-html[data-theme=dark] .colhead em{background:#1a2a58;color:#aab6da}
-html[data-theme=dark] .addtask input,html[data-theme=dark] .sheet input,html[data-theme=dark] .sheet select,html[data-theme=dark] .sheet textarea,html[data-theme=dark] .editor select{background:#0d1a3c;border-color:#2a3d78;color:var(--text)}
+html[data-theme=dark] .task:hover,html[data-theme=dark] .noteitem:hover{background:#0f1e42}
+html[data-theme=dark] .noteitem.sel{background:#14275a}
+html[data-theme=dark] .colhead em{background:#12214a;color:#aab6da}
+html[data-theme=dark] .addtask input,html[data-theme=dark] .sheet input,html[data-theme=dark] .sheet select,html[data-theme=dark] .sheet textarea,html[data-theme=dark] .editor select{background:#060f26;border-color:#1c2e5c;color:var(--text)}
 html[data-theme=dark] .editor .title,html[data-theme=dark] .editor textarea{background:transparent;color:var(--text)}
 html[data-theme=dark] .editor textarea{color:#cdd6f4}
 html[data-theme=dark] .time{color:#aab6da}
-html[data-theme=dark] .cell{border-top-color:#1a2a58}
-html[data-theme=dark] .cell:hover{background:#16265a}
-html[data-theme=dark] .cell.todaycol{background:repeating-linear-gradient(115deg,#13234d 0 22px,#172a5a 22px 44px)}
+html[data-theme=dark] .cell{border-top-color:#111f42}
+html[data-theme=dark] .cell:hover{background:#0f1d40}
+html[data-theme=dark] .cell.todaycol{background:repeating-linear-gradient(115deg,#0b1834 0 22px,#0e1c3d 22px 44px)}
 html[data-theme=dark] .nowline,html[data-theme=dark] .nowline::before{background:#7b8cff}
 html[data-theme=dark] .sw.on{border-color:#fff}
 html[data-theme=dark] .modal{background:rgba(2,6,20,.6)}
@@ -486,7 +486,7 @@ $('#newNoteBtn').onclick=newNote;
 $('#search').oninput=e=>{query=e.target.value;if(view!=='notes')go('notes');else renderNotes()};
 $('#backupBtn').onclick=backupModal;
 $('#themeBtn').onclick=()=>{const r=document.documentElement,t=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=t;
-  try{localStorage.setItem('rymeNotes.theme',t)}catch(e){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0b1630':'#6c5ce7';render()};
+  try{localStorage.setItem('rymeNotes.theme2',t)}catch(e){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#050b1d':'#6c5ce7';render()};
 $('#prevWk').onclick=()=>{weekOffset--;render()};$('#nextWk').onclick=()=>{weekOffset++;render()};$('#thisWk').onclick=()=>{weekOffset=0;render()};
 
 document.addEventListener('click',e=>{
