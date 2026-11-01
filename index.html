@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ryme Notes</title>
-<meta name="theme-color" content="#6c5ce7">
+<meta name="theme-color" content="#0b1630">
+<script>(function(){var t='dark';try{t=localStorage.getItem('rymeNotes.theme')||'dark'}catch(e){}document.documentElement.dataset.theme=t})()</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23a29bfe'/%3E%3Cstop offset='1' stop-color='%235b4cf0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -63,7 +64,7 @@ h2{font-size:19px;font-weight:700}
 .nb{border-radius:var(--radius);color:#fff;padding:14px 14px 0;position:relative;overflow:hidden;cursor:pointer;min-height:96px;display:flex;flex-direction:column;transition:transform .15s}
 .nb:hover{transform:translateY(-2px)}
 .nb .meta{display:flex;align-items:center;gap:6px;font-size:11px}
-.nb .pill{background:rgba(255,255,255,.9);color:var(--text);border-radius:10px;padding:1px 7px;font-weight:600}
+.nb .pill{background:rgba(255,255,255,.9);color:#1f2333;border-radius:10px;padding:1px 7px;font-weight:600}
 .nb b{font-size:15px;margin-top:6px;display:block}
 .nb small{font-size:11.5px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;margin-bottom:10px}
 .nb .bar{height:12px;margin:auto -14px 0;background:rgba(255,255,255,.35)}
@@ -164,6 +165,52 @@ h2{font-size:19px;font-weight:700}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .hint{font-size:12px;color:var(--muted)}
 .view{display:none}.view.on{display:block}
+
+/* theme switch */
+.themesw{display:flex;align-items:center;gap:12px;padding:10px 24px;font-size:14px;color:#4b5064;width:100%;text-align:left}
+.themesw .knob{margin-left:auto;width:36px;height:20px;border-radius:12px;background:#dfe2ec;position:relative;transition:.2s;flex-shrink:0}
+.themesw .knob::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.themesw svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7}
+
+/* ===== NAVY DARK THEME ===== */
+html[data-theme=dark]{color-scheme:dark;
+  --bg:#0b1630; --panel:#12214a; --line:#22346a; --text:#e8edff; --muted:#8e9cc4; --soft:#5d6c99;
+}
+html[data-theme=dark] body{background:linear-gradient(135deg,#061024 0%,#0d1d47 55%,#1b2a6b 100%)}
+html[data-theme=dark] .app{box-shadow:0 30px 80px rgba(0,0,20,.6)}
+html[data-theme=dark] .side{background:#0e1b3d;border-right:1px solid #1a2a58}
+html[data-theme=dark] .nav,html[data-theme=dark] .themesw{color:#aab6da}
+html[data-theme=dark] .nav:hover{color:#8fa2ff}
+html[data-theme=dark] .nav.active{color:#fff}
+html[data-theme=dark] .nav.active::before{background:#6d7dff;box-shadow:0 0 10px #6d7dff}
+html[data-theme=dark] .nbnav .count{background:#1a2a58;color:#aab6da}
+html[data-theme=dark] .themesw .knob{background:#5b5ff0}
+html[data-theme=dark] .themesw .knob::after{left:18px}
+html[data-theme=dark] .search,html[data-theme=dark] .iconbtn,html[data-theme=dark] .ghost,html[data-theme=dark] .tab:not(.on),
+html[data-theme=dark] .col,html[data-theme=dark] .planner,html[data-theme=dark] .notelist,html[data-theme=dark] .editor,
+html[data-theme=dark] .rnote,html[data-theme=dark] .sheet{background:var(--panel);border-color:var(--line);color:var(--text)}
+html[data-theme=dark] .col,html[data-theme=dark] .planner,html[data-theme=dark] .notelist,html[data-theme=dark] .editor,html[data-theme=dark] .rnote{border:1px solid #1d2e5e}
+html[data-theme=dark] .nb.add{background:transparent;border-color:#2a3d78;color:var(--muted)}
+html[data-theme=dark] .task{color:#c6d0ee}
+html[data-theme=dark] .task:hover,html[data-theme=dark] .noteitem:hover{background:#18295a}
+html[data-theme=dark] .noteitem.sel{background:#1e2f68}
+html[data-theme=dark] .colhead em{background:#1a2a58;color:#aab6da}
+html[data-theme=dark] .addtask input,html[data-theme=dark] .sheet input,html[data-theme=dark] .sheet select,html[data-theme=dark] .sheet textarea,html[data-theme=dark] .editor select{background:#0d1a3c;border-color:#2a3d78;color:var(--text)}
+html[data-theme=dark] .editor .title,html[data-theme=dark] .editor textarea{background:transparent;color:var(--text)}
+html[data-theme=dark] .editor textarea{color:#cdd6f4}
+html[data-theme=dark] .time{color:#aab6da}
+html[data-theme=dark] .cell{border-top-color:#1a2a58}
+html[data-theme=dark] .cell:hover{background:#16265a}
+html[data-theme=dark] .cell.todaycol{background:repeating-linear-gradient(115deg,#13234d 0 22px,#172a5a 22px 44px)}
+html[data-theme=dark] .nowline,html[data-theme=dark] .nowline::before{background:#7b8cff}
+html[data-theme=dark] .sw.on{border-color:#fff}
+html[data-theme=dark] .modal{background:rgba(2,6,20,.6)}
+html[data-theme=dark] .toast{background:#5b5ff0}
+html[data-theme=dark] .nb{box-shadow:0 8px 22px rgba(0,0,0,.25)}
+html[data-theme=dark] .ev{box-shadow:0 4px 14px rgba(0,0,0,.3)}
+html[data-theme=dark] ::-webkit-scrollbar{width:10px;height:10px}
+html[data-theme=dark] ::-webkit-scrollbar-thumb{background:#22346a;border-radius:8px}
+html[data-theme=dark] ::-webkit-scrollbar-track{background:transparent}
 @media (max-width:900px){.side{width:64px}.side .lbl,.navlabel,.logo span,.user span,.nav .count{display:none}.logo{padding:0 19px 30px}.nav{padding:12px 22px}.board{grid-template-columns:repeat(2,1fr)}.notesview{grid-template-columns:1fr}.search{width:140px}}
 </style>
 </head>
@@ -179,6 +226,7 @@ h2{font-size:19px;font-weight:700}
     <div class="navlabel">Notebooks</div>
     <div id="nbNav"></div>
     <div class="grow"></div>
+    <button class="themesw" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span class="lbl">Dark mode</span><span class="knob"></span></button>
     <button class="nav" id="backupBtn"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg><span class="lbl">Backup / Restore</span></button>
     <div style="height:14px"></div>
     <div class="user"><div class="avatar">RJ</div><span>Ryan James Lim</span></div>
@@ -437,6 +485,8 @@ function newNote(){const nb=filterNb||S.notebooks[0].id;const n={id:uid(),nb,tit
 $('#newNoteBtn').onclick=newNote;
 $('#search').oninput=e=>{query=e.target.value;if(view!=='notes')go('notes');else renderNotes()};
 $('#backupBtn').onclick=backupModal;
+$('#themeBtn').onclick=()=>{const r=document.documentElement,t=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=t;
+  try{localStorage.setItem('rymeNotes.theme',t)}catch(e){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0b1630':'#6c5ce7';render()};
 $('#prevWk').onclick=()=>{weekOffset--;render()};$('#nextWk').onclick=()=>{weekOffset++;render()};$('#thisWk').onclick=()=>{weekOffset=0;render()};
 
 document.addEventListener('click',e=>{
