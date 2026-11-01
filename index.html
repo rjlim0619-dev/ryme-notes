@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ryme Notes</title>
 <meta name="theme-color" content="#050b1d">
-<script>(function(){var t='dark';try{t=localStorage.getItem('rymeNotes.theme2')||'dark'}catch(e){}document.documentElement.dataset.theme=t})()</script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<script src="theme.js"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23a29bfe'/%3E%3Cstop offset='1' stop-color='%235b4cf0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f4f6fb; --panel:#fff; --line:#e9ecf3; --text:#1f2333; --muted:#8a90a2; --soft:#b6bccb;
@@ -19,7 +20,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{font-family:Inter,system-ui,Segoe UI,sans-serif;color:var(--text);
+body{font-family:'Segoe UI Variable Text','Segoe UI',system-ui,-apple-system,Roboto,sans-serif;color:var(--text);
   background:linear-gradient(135deg,#bcd3ff 0%,#9aa8ff 50%,#7c6cf5 100%);
   display:flex;align-items:center;justify-content:center;padding:28px;overflow:hidden}
 button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
@@ -220,6 +221,13 @@ h2{font-size:19px;font-weight:700}
 .lockcard .err{color:#ff7a93;font-size:12.5px;min-height:16px}
 .lockcard .link{font-size:12px;color:#7f8db5;text-decoration:underline;margin-top:4px}
 .lockcard .who{font-size:13px;color:#aab6da;display:flex;align-items:center;gap:8px}
+.pwrap{position:relative;width:100%}.pwrap input{width:100%;padding-right:44px}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:15px;opacity:.55;padding:4px}.eye:hover{opacity:1}
+.meter{display:flex;gap:4px;width:100%;margin-top:-4px}.meter i{flex:1;height:4px;border-radius:3px;background:rgba(140,150,200,.25)}
+.mtxt{font-size:11px;color:#8e9cc4;width:100%;margin-top:-6px;min-height:13px}
+.shield{font-size:11.5px;color:#6f7fa8}
+.secrow{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:6px 0;border-bottom:1px solid var(--line)}.secrow b{color:var(--text);font-weight:600}
+.chkrow{flex-direction:row!important;align-items:center;gap:8px!important;font-size:13px!important;color:var(--text)!important}
 .shake{animation:shake .35s}@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 
 /* theme switch */
@@ -282,6 +290,7 @@ html[data-theme=dark] ::-webkit-scrollbar-track{background:transparent}
     <div class="navlabel">Notebooks</div>
     <div id="nbNav"></div>
     <div class="grow"></div>
+    <button class="nav" id="secBtn"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="lbl">Security</span></button>
     <button class="nav" id="lockBtn"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span class="lbl">Lock</span></button>
     <button class="themesw" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span class="lbl">Dark mode</span><span class="knob"></span></button>
     <button class="nav" id="backupBtn"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg><span class="lbl">Backup / Restore</span></button>
@@ -348,349 +357,6 @@ html[data-theme=dark] ::-webkit-scrollbar-track{background:transparent}
 <div class="toast" id="toast"></div>
 <div class="lock" id="lock"><form class="lockcard" id="lockForm" autocomplete="off"></form></div>
 
-<script>
-const COLORS=['purple','blue','yellow','pink','green','slate'];
-const HEX={purple:'#a678f5',blue:'#6f8ff5',yellow:'#fbb43a',pink:'#f472c8',green:'#4fc68a',slate:'#7a829c'};
-const COLS=[['todo','To Do'],['doing','In Progress'],['review','Review'],['done','Done']];
-const KEY='rymeNotes.v1';
-const uid=()=>Math.random().toString(36).slice(2,10);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const $=s=>document.querySelector(s);
-
-function seed(){
-  const nb=[
-    {id:'n1',name:'HIS 007',desc:'Philippine History notes & reports',color:'purple'},
-    {id:'n2',name:'ITE 289',desc:'Information Management, SQL & APIs',color:'blue'},
-    {id:'n3',name:'Roblox Games',desc:'Ideas for FIND IT!, GTL & more',color:'yellow'},
-    {id:'n4',name:'YouTube / Ryme',desc:'Video ideas, scripts and uploads',color:'pink'},
-  ];
-  const now=Date.now();
-  return {notebooks:nb,
-    notes:[
-      {id:uid(),nb:'n1',title:'Welcome to Ryme Notes 👋',body:'This is your notes app. Everything saves automatically on this computer.\n\n• Make notebooks for each class or project (left sidebar or the colored cards).\n• Use the Task Board for to-dos and drag them to Done.\n• Use the Planner for your weekly schedule.\n• Use Backup / Restore to save a copy of everything.',pinned:true,updated:now},
-      {id:uid(),nb:'n2',title:'SQL JOIN cheat sheet',body:'INNER JOIN – only matching rows\nLEFT JOIN – all from left + matches\nRIGHT JOIN – all from right + matches\nFULL OUTER JOIN – everything from both',pinned:false,updated:now-3600e3},
-      {id:uid(),nb:'n3',title:'Next game update',body:'New biome ideas, more hidden items, rebirth rewards.',pinned:false,updated:now-7200e3},
-    ],
-    tasks:[
-      {id:uid(),title:'Read Module 13',col:'todo',nb:'n1'},
-      {id:uid(),title:'Finish API join endpoints',col:'doing',nb:'n2'},
-      {id:uid(),title:'Edit next Roblox short',col:'review',nb:'n4'},
-      {id:uid(),title:'Set up Ryme Notes',col:'done',nb:'n3'},
-    ],
-    events:[]};
-}
-/* ---------- encrypted storage + login ---------- */
-const EKEY='rymeNotes.enc.v1';
-let S=null,CK=null,saveT=null;
-const te=new TextEncoder(),td=new TextDecoder();
-const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u)));
-const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function deriveKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw),'PBKDF2',false,['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-let SALT=null;
-const OWNER_HASH='34979204a66d448b264b669988f676f20a1bcc36c6ca401523eb0a6cfa0d7289';
-const normEmail=e=>e.trim().toLowerCase();
-async function emailOk(e){const h=await crypto.subtle.digest('SHA-256',te.encode(normEmail(e)));return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')===OWNER_HASH}
-async function writeEnc(){if(!CK)return;const iv=crypto.getRandomValues(new Uint8Array(12));
-  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},CK,te.encode(JSON.stringify(S)));
-  try{localStorage.setItem(EKEY,JSON.stringify({v:3,salt:b64(SALT),iv:b64(iv),ct:b64(ct)}))}catch(e){toast('Could not save!')}}
-function save(){clearTimeout(saveT);saveT=setTimeout(writeEnc,250)}
-window.addEventListener('beforeunload',()=>{if(saveT){clearTimeout(saveT);writeEnc()}});
-const readEnc=()=>{try{return JSON.parse(localStorage.getItem(EKEY))}catch(e){return null}};
-
-function lockUI(mode,msg){
-  const f=$('#lockForm');$('#lock').classList.remove('hide');
-  const head='<div class="orb"></div>';
-  if(mode==='create')f.innerHTML=head+`<h2>Create your password</h2><p>Only someone with this password can open Ryme Notes on this computer. Your notes get encrypted with it.</p>
-    <input type="password" id="pw1" placeholder="New password (at least 6 characters)" autocomplete="new-password">
-    <input type="password" id="pw2" placeholder="Type it again" autocomplete="new-password">
-    <div class="err" id="lerr">${msg||''}</div><button class="primary" type="submit">Set password</button>
-    <p style="font-size:11.5px">There is no "forgot password". If you forget it, your notes can't be recovered, so pick one you'll remember.</p>`;
-  else if(mode==='unlock')f.innerHTML=head+`<h2>Ryme Notes</h2><div class="who"><span class="avatar" style="width:26px;height:26px;font-size:10px">RJ</span>Ryan James Lim</div>
-    ${(readEnc()||{}).v===2?'<input type="email" id="em" placeholder="Gmail (one last time)">':''}
-    <input type="password" id="pw1" placeholder="Password" autocomplete="current-password">
-    <div class="err" id="lerr">${msg||''}</div><button class="primary" type="submit">Unlock</button>
-    <button class="link" type="button" id="forgot">Forgot password?</button>`;
-  else if(mode==='reset')f.innerHTML=head+`<h2>Erase and start over?</h2><p>Without the password your notes can't be opened. This deletes everything saved in Ryme Notes on this computer and lets you set a new password.</p>
-    <input id="pw1" placeholder='Type ERASE to confirm'><div class="err" id="lerr"></div>
-    <button class="primary" type="submit" style="background:#e5546e">Erase everything</button><button class="link" type="button" id="back">Go back</button>`;
-  f.dataset.mode=mode;setTimeout(()=>($('#em')||$('#pw1'))?.focus(),30);
-  $('#forgot')&&($('#forgot').onclick=()=>lockUI('reset'));$('#back')&&($('#back').onclick=()=>lockUI('unlock'));
-}
-function fail(m){$('#lerr').textContent=m;const f=$('#lockForm');f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake')}
-$('#lockForm').onsubmit=async e=>{e.preventDefault();const mode=e.target.dataset.mode,pw=$('#pw1').value;
-  const em=$('#em')?$('#em').value:'';
-  if($('#em')&&!(await emailOk(em)))return fail('This Gmail is not allowed.');
-  if(mode==='create'){
-    if(pw.length<6)return fail('Use at least 6 characters.');if(pw!==$('#pw2').value)return fail("Passwords don't match.");
-    let old=null;try{old=JSON.parse(localStorage.getItem(KEY))}catch(_){}
-    S=(old&&old.notebooks)?old:seed();SALT=crypto.getRandomValues(new Uint8Array(16));CK=await deriveKey(pw,SALT);
-    await writeEnc();try{localStorage.removeItem(KEY)}catch(_){}unlocked();toast('Password set 🔒');
-  }else if(mode==='unlock'){
-    const d=readEnc();$('#lerr').textContent='Checking…';
-    try{SALT=ub64(d.salt);const k=await deriveKey(d.v===2?normEmail(em)+'|'+pw:pw,SALT);
-      const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(d.iv)},k,ub64(d.ct));S=JSON.parse(td.decode(pt));
-      if(d.v===2){CK=await deriveKey(pw,SALT);await writeEnc()}else CK=k;unlocked()}
-    catch(_){fail('Wrong password.');$('#pw1').value='';$('#pw1').focus()}
-  }else if(mode==='reset'){
-    if(pw.trim().toUpperCase()!=='ERASE')return fail('Type ERASE to confirm.');
-    try{localStorage.removeItem(EKEY);localStorage.removeItem(KEY)}catch(_){}lockUI('create');
-  }};
-function unlocked(){$('#lock').classList.add('hide');$('#lockForm').innerHTML='';view='home';selNote=null;filterNb=null;go('home');bumpIdle()}
-function lockNow(){if(saveT){clearTimeout(saveT);writeEnc()}S=null;CK=null;closeModal();
-  document.querySelectorAll('#nbCards,#stats,#taskList,#todayList,#todayLine,#recent,#noteList,#editor,#boardFull,#gridFull,#nbNav').forEach(x=>x.innerHTML='');lockUI('unlock')}
-/* auto-lock after 15 minutes of no activity */
-let idleT;function bumpIdle(){clearTimeout(idleT);if(CK)idleT=setTimeout(lockNow,15*60*1000)}
-['mousemove','keydown','click','scroll'].forEach(ev=>document.addEventListener(ev,bumpIdle,{passive:true}));
-
-let view='home',selNote=null,filterNb=null,weekOffset=0,query='';
-const nbById=id=>S.notebooks.find(n=>n.id===id);
-const nbColor=id=>(nbById(id)||{color:'slate'}).color;
-const initials=s=>(s||'?').replace(/[^A-Za-z0-9 ]/g,'').split(/\s+/).filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'•';
-
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800)}
-
-function go(v){view=v;document.querySelectorAll('.nav[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===v&&!(v==='notes'&&filterNb)));
-  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
-  $('#pageTitle').textContent={home:greet()+', Ryan 👋',notes:filterNb?(nbById(filterNb)?.name||'Notes'):'Notes',board:'Task Board',planner:'Planner'}[v];
-  render()}
-
-/* ---------- sidebar & cards ---------- */
-function renderSide(){
-  $('#noteCount').textContent=S.notes.length;
-  $('#nbNav').innerHTML=S.notebooks.map(n=>`<button class="nav nbnav ${filterNb===n.id&&view==='notes'?'active':''}" data-nb="${n.id}"><span class="dot" style="background:${HEX[n.color]}"></span><span class="lbl">${esc(n.name)}</span><span class="count">${S.notes.filter(x=>x.nb===n.id).length}</span></button>`).join('')+
-  `<button class="nav" id="addNbSide"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">New notebook</span></button>`;
-}
-function renderCards(){
-  $('#nbCards').innerHTML=S.notebooks.map(n=>{
-    const notes=S.notes.filter(x=>x.nb===n.id).length;
-    const t=S.tasks.filter(x=>x.nb===n.id);const pct=t.length?Math.round(t.filter(x=>x.col==='done').length/t.length*100):0;
-    return `<div class="nb c-${n.color}" data-nb="${n.id}">
-      <div class="meta"><span class="pill">${notes} note${notes===1?'':'s'}</span>${t.length?`<span>${t.filter(x=>x.col==='done').length}/${t.length} tasks done</span>`:''}</div>
-      <b>${esc(n.name)}</b><small>${esc(n.desc||'')}</small>
-      <button class="menu" data-editnb="${n.id}" title="Edit notebook">⋮</button>
-      <div class="bar"><i style="width:${Math.max(pct,8)}%"></i></div></div>`}).join('')+
-    `<div class="nb add" id="addNbCard">+ New notebook</div>`;
-}
-
-/* ---------- board ---------- */
-function taskRow(t){
-  const c=HEX[nbColor(t.nb)];
-  return `<div class="task" draggable="true" data-task="${t.id}">
-    <span class="badge" style="background:${c}">${initials(nbById(t.nb)?.name)}</span>
-    <span class="t" title="${esc(t.title)}">${esc(t.title)}</span>
-    ${t.col==='done'?'<span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>':''}
-    <button class="x" data-deltask="${t.id}" title="Delete">×</button></div>`}
-function renderBoard(el,mini){
-  el.innerHTML=COLS.map(([k,l])=>{
-    let ts=S.tasks.filter(t=>t.col===k);const total=ts.length;
-    if(mini)ts=ts.slice(-3);
-    return `<div class="col" data-col="${k}"><div class="colhead"><span>${l}</span><em>${total}</em></div>
-      ${ts.map(taskRow).join('')||'<p class="hint" style="padding:6px 4px">Nothing here yet</p>'}
-      ${mini?`<div class="colfoot">${total>3?`+${total-3} more`:''}<span class="star">★</span></div>`:
-      `<div class="addtask"><input data-addcol="${k}" placeholder="+ Add a task"></div>`}</div>`}).join('');
-}
-
-/* ---------- notes ---------- */
-function filteredNotes(){
-  const q=query.toLowerCase();
-  return S.notes.filter(n=>(!filterNb||n.nb===filterNb)&&(!q||(n.title+' '+n.body).toLowerCase().includes(q)))
-    .sort((a,b)=>(b.pinned-a.pinned)||(b.updated-a.updated));
-}
-const ago=t=>{const d=(Date.now()-t)/1000;if(d<60)return'just now';if(d<3600)return Math.floor(d/60)+'m ago';if(d<86400)return Math.floor(d/3600)+'h ago';return new Date(t).toLocaleDateString()};
-function renderNotes(){
-  const list=filteredNotes();
-  $('#noteList').innerHTML=list.map(n=>`<div class="noteitem ${n.id===selNote?'sel':''}" data-note="${n.id}" style="border-left-color:${HEX[nbColor(n.nb)]}">
-    <b>${n.pinned?'★ ':''}${esc(n.title||'Untitled')}</b><p>${esc(n.body.split('\n')[0]||'No content')}</p><div class="d">${esc(nbById(n.nb)?.name||'')} · ${ago(n.updated)}</div></div>`).join('')||'<div class="empty" style="padding:30px">No notes found</div>';
-  const n=S.notes.find(x=>x.id===selNote);
-  if(!n){$('#editor').innerHTML='<div class="empty"><div>Pick a note on the left<br>or press <b>+ New note</b>.</div></div>';return}
-  $('#editor').innerHTML=`<input class="title" id="edTitle" placeholder="Title" value="${esc(n.title)}">
-    <div class="row"><select id="edNb">${S.notebooks.map(b=>`<option value="${b.id}" ${b.id===n.nb?'selected':''}>${esc(b.name)}</option>`).join('')}</select>
-    <button class="pinbtn ${n.pinned?'on':''}" id="edPin" title="Pin">★</button><span id="edSaved">Saved ${ago(n.updated)}</span>
-    <button class="del" id="edDel">Delete note</button></div>
-    <textarea id="edBody" placeholder="Start writing…">${esc(n.body)}</textarea>`;
-  const touch=()=>{n.updated=Date.now();save();$('#edSaved').textContent='Saved just now';
-    const it=document.querySelector(`.noteitem[data-note="${n.id}"]`);if(it){it.querySelector('b').innerHTML=(n.pinned?'★ ':'')+esc(n.title||'Untitled');it.querySelector('p').textContent=n.body.split('\n')[0]||'No content'}};
-  $('#edTitle').oninput=e=>{n.title=e.target.value;touch()};
-  $('#edBody').oninput=e=>{n.body=e.target.value;touch()};
-  $('#edNb').onchange=e=>{n.nb=e.target.value;touch();render()};
-  $('#edPin').onclick=()=>{n.pinned=!n.pinned;touch();render()};
-  $('#edDel').onclick=()=>confirmBox('Delete this note?',()=>{S.notes=S.notes.filter(x=>x!==n);selNote=null;save();render();toast('Note deleted')});
-}
-const STLBL={todo:'To Do',doing:'In Progress',review:'Review'};
-function greet(){const h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
-function renderDash(){
-  const today=iso(new Date()),nowH=new Date().getHours()+new Date().getMinutes()/60;
-  const open=S.tasks.filter(t=>t.col!=='done'),done=S.tasks.filter(t=>t.col==='done').length;
-  const todays=S.events.filter(e=>e.day===today).sort((a,b)=>a.start-b.start);
-  const next=todays.find(e=>e.end>nowH);
-  $('#todayLine').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+
-    (next?` · Next: ${next.title} at ${fmtH(next.start)}`:'');
-  const ic={notes:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7"/>',todo:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/>',
-    done:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'};
-  const tile=(go,c,svg,n,l)=>`<button class="stat" data-go="${go}"><span class="ic" style="background:${c}"><svg viewBox="0 0 24 24">${svg}</svg></span><span><b>${n}</b><span>${l}</span></span></button>`;
-  $('#stats').innerHTML=tile('notes','linear-gradient(135deg,#b98cfa,#8e5cf0)',ic.notes,S.notes.length,'Notes')+
-    tile('board','linear-gradient(135deg,#94b0fa,#4a7cf0)',ic.todo,open.length,'Tasks to do')+
-    tile('board','linear-gradient(135deg,#7fdcab,#2fa86c)',ic.done,done,'Tasks done')+
-    tile('planner','linear-gradient(135deg,#fdd060,#fb9a2c)',ic.cal,todays.length,"Today's events");
-  const ord={doing:0,review:1,todo:2};
-  $('#taskList').innerHTML=open.sort((a,b)=>ord[a.col]-ord[b.col]).slice(0,7).map(t=>`<div class="trow">
-      <span class="chk" data-donetask="${t.id}" title="Mark as done"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>
-      <span class="tt" title="${esc(t.title)}">${esc(t.title)}</span>
-      <span class="ndot" title="${esc(nbById(t.nb)?.name||'')}" style="background:${HEX[nbColor(t.nb)]}"></span>
-      <span class="chip ${t.col}">${STLBL[t.col]}</span></div>`).join('')+(open.length>7?`<p class="hint" style="padding:4px 8px">+${open.length-7} more on the board</p>`:'')
-    ||'<div class="emptyp">🎉 All caught up! Add a task below.</div>';
-  $('#todayList').innerHTML=todays.map(e=>`<div class="erow ${e.end<=nowH?'past':e.start<=nowH?'now':''}" data-ev="${e.id}">
-      <span class="bar2" style="background:${HEX[e.color]}"></span><span class="tm">${fmtH(e.start)} – ${fmtH(e.end)}</span>
-      <span class="tt" style="flex:1">${esc(e.title)}</span>${e.start<=nowH&&e.end>nowH?'<span class="chip todo">Now</span>':''}</div>`).join('')
-    ||'<div class="emptyp">Nothing scheduled today.</div>';
-}
-function renderRecent(){
-  const r=[...S.notes].sort((a,b)=>(b.pinned-a.pinned)||(b.updated-a.updated)).slice(0,5);
-  $('#recent').innerHTML=r.map(n=>`<div class="nrow" data-note="${n.id}"><span class="ndot" style="background:${HEX[nbColor(n.nb)]};width:10px;height:10px"></span>
-    <div class="nt"><b>${n.pinned?'★ ':''}${esc(n.title||'Untitled')}</b><p>${esc(n.body.replace(/\s+/g,' ').trim()||'Empty note')}</p></div>
-    <span class="nm">${esc(nbById(n.nb)?.name||'')}<br>${ago(n.updated)}</span></div>`).join('')||'<div class="emptyp">No notes yet. Press <b>+ New note</b> to write one.</div>';
-}
-
-/* ---------- planner ---------- */
-const HOURS=[];for(let h=7;h<=21;h++)HOURS.push(h);
-function weekDays(off){const d=new Date();d.setHours(0,0,0,0);const dow=(d.getDay()+6)%7;d.setDate(d.getDate()-dow+off*7);
-  return [...Array(7)].map((_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return x})}
-const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const fmtH=h=>{const hh=Math.floor(h),mm=Math.round((h-hh)*60);return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')};
-function renderGrid(el,off,mini){
-  const days=weekDays(off),today=iso(new Date());
-  const hours=mini?(()=>{const n=new Date().getHours();const s=Math.min(Math.max(n-1,7),17);return HOURS.filter(h=>h>=s&&h<s+5)})():HOURS;
-  const H=56;
-  let h='<div></div>'+days.map(d=>`<div class="dayh ${iso(d)===today?'today':''}">${d.toLocaleDateString('en-US',{weekday:'long'})}<br>${d.toLocaleDateString('en-GB').replace(/\//g,'.')}</div>`).join('');
-  hours.forEach(hr=>{h+=`<div class="time">${fmtH(hr)}</div>`+days.map(d=>`<div class="cell ${iso(d)===today?'todaycol':''}" data-day="${iso(d)}" data-hour="${hr}"></div>`).join('')});
-  el.innerHTML=h;
-  // events
-  const first=hours[0],last=hours[hours.length-1]+1;
-  requestAnimationFrame(()=>{
-    S.events.forEach(ev=>{
-      const di=days.findIndex(d=>iso(d)===ev.day);if(di<0)return;
-      const s=Math.max(ev.start,first),e=Math.min(ev.end,last);if(e<=s)return;
-      const cell=el.querySelector(`.cell[data-day="${ev.day}"][data-hour="${Math.floor(s)}"]`);if(!cell)return;
-      const div=document.createElement('div');div.className='ev c-'+ev.color;div.dataset.ev=ev.id;
-      div.style.top=(cell.offsetTop+(s-Math.floor(s))*H+3)+'px';div.style.height=((e-s)*H-6)+'px';
-      div.style.left=(cell.offsetLeft+4)+'px';div.style.width=(cell.offsetWidth-8)+'px';div.style.right='auto';
-      div.innerHTML=`<div class="h">${fmtH(ev.start)}–${fmtH(ev.end)}</div><div>${esc(ev.title)}</div><div class="bar"><i style="background:rgba(0,0,0,.12)"></i></div>`;
-      el.appendChild(div)});
-    if(off===0){const n=new Date(),hr=n.getHours()+n.getMinutes()/60;
-      if(hr>=first&&hr<last){const c=el.querySelector(`.cell[data-hour="${Math.floor(hr)}"]`);
-        const line=document.createElement('div');line.className='nowline';line.style.top=(c.offsetTop+(hr-Math.floor(hr))*H)+'px';el.appendChild(line)}}
-  });
-  if(!mini){const a=days[0],b=days[6];$('#weekLabel').textContent=a.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' – '+b.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
-}
-
-/* ---------- modals ---------- */
-function openModal(html){$('#sheet').innerHTML=html;$('#modal').classList.add('open');const f=$('#sheet').querySelector('input,textarea');f&&setTimeout(()=>f.focus(),30)}
-function closeModal(){$('#modal').classList.remove('open')}
-$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-function confirmBox(msg,yes){openModal(`<h3>${esc(msg)}</h3><div class="btns"><button class="ghost" id="cNo">Cancel</button><button class="primary" id="cYes" style="background:#e5546e">Delete</button></div>`);
-  $('#cNo').onclick=closeModal;$('#cYes').onclick=()=>{closeModal();yes()}}
-function swatches(cur){return `<div class="swatches">${COLORS.map(c=>`<span class="sw ${c===cur?'on':''}" data-c="${c}" style="background:${HEX[c]}"></span>`).join('')}</div>`}
-function bindSw(){let c=$('#sheet .sw.on').dataset.c;$('#sheet').querySelectorAll('.sw').forEach(s=>s.onclick=()=>{$('#sheet').querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));s.classList.add('on');c=s.dataset.c});return()=>c}
-function notebookModal(id){
-  const n=id?nbById(id):{name:'',desc:'',color:COLORS[S.notebooks.length%4]};
-  openModal(`<h3>${id?'Edit':'New'} notebook</h3><label>Name<input id="mName" value="${esc(n.name)}" maxlength="40"></label>
-    <label>Description<input id="mDesc" value="${esc(n.desc)}" maxlength="80"></label><label>Color${swatches(n.color)}</label>
-    <div class="btns">${id&&S.notebooks.length>1?'<button class="danger" id="mDel">Delete</button>':''}<button class="ghost" id="mCancel">Cancel</button><button class="primary" id="mSave">Save</button></div>`);
-  const getC=bindSw();$('#mCancel').onclick=closeModal;
-  $('#mSave').onclick=()=>{const name=$('#mName').value.trim();if(!name){$('#mName').focus();return}
-    if(id){Object.assign(n,{name,desc:$('#mDesc').value.trim(),color:getC()})}else S.notebooks.push({id:uid(),name,desc:$('#mDesc').value.trim(),color:getC()});
-    save();closeModal();render()};
-  $('#mName').onkeydown=e=>{if(e.key==='Enter')$('#mSave').click()};
-  if($('#mDel'))$('#mDel').onclick=()=>confirmBox(`Delete "${n.name}"? Its notes and tasks move to "${S.notebooks.find(x=>x.id!==id).name}".`,()=>{
-    const to=S.notebooks.find(x=>x.id!==id).id;S.notes.forEach(x=>{if(x.nb===id)x.nb=to});S.tasks.forEach(x=>{if(x.nb===id)x.nb=to});
-    S.notebooks=S.notebooks.filter(x=>x.id!==id);if(filterNb===id)filterNb=null;save();render()});
-}
-function eventModal(ev,day,hour){
-  const isNew=!ev;ev=ev||{title:'',day,start:hour,end:hour+1,color:'purple'};
-  const opts=v=>{let o='';for(let h=6;h<=23.5;h+=.5)o+=`<option value="${h}" ${h===v?'selected':''}>${fmtH(h)}</option>`;return o};
-  openModal(`<h3>${isNew?'Add':'Edit'} schedule block</h3><label>What<input id="eT" value="${esc(ev.title)}" placeholder="e.g. HIS 007 class"></label>
-    <label>Day<input type="date" id="eD" value="${ev.day}"></label>
-    <div class="two"><label>Start<select id="eS">${opts(ev.start)}</select></label><label>End<select id="eE">${opts(ev.end)}</select></label></div>
-    <label>Color${swatches(ev.color)}</label>
-    <div class="btns">${isNew?'':'<button class="danger" id="eDel">Delete</button>'}<button class="ghost" id="eC">Cancel</button><button class="primary" id="eOk">Save</button></div>`);
-  const getC=bindSw();$('#eC').onclick=closeModal;
-  $('#eOk').onclick=()=>{const t=$('#eT').value.trim();if(!t){$('#eT').focus();return}
-    let s=+$('#eS').value,e=+$('#eE').value;if(e<=s)e=s+.5;
-    Object.assign(ev,{title:t,day:$('#eD').value||day,start:s,end:e,color:getC()});if(isNew){ev.id=uid();S.events.push(ev)}
-    save();closeModal();render()};
-  $('#eT').onkeydown=e=>{if(e.key==='Enter')$('#eOk').click()};
-  if($('#eDel'))$('#eDel').onclick=()=>{S.events=S.events.filter(x=>x!==ev);save();closeModal();render()};
-}
-function backupModal(){
-  openModal(`<h3>Backup / Restore</h3><p class="hint">Your notes are saved in this browser automatically. Make a backup file now and then, so you can restore them on another computer or after clearing your browser. Note: the backup file is not password-protected, so keep it somewhere private.</p>
-    <button class="primary" id="bDown">Download backup file</button><button class="ghost" id="bCopy">Copy backup as text</button>
-    <label>Restore from a backup file<input type="file" id="bFile" accept=".json,application/json"></label>
-    <label>…or paste backup text<textarea id="bText" rows="3" placeholder="Paste here, then press Restore"></textarea></label>
-    <div class="btns"><button class="ghost" id="bClose">Close</button><button class="primary" id="bRestore">Restore</button></div>`);
-  const data=()=>JSON.stringify(S,null,1);
-  $('#bClose').onclick=closeModal;
-  $('#bDown').onclick=()=>{try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data()],{type:'application/json'}));a.download='ryme-notes-backup-'+iso(new Date())+'.json';document.body.appendChild(a);a.click();a.remove();toast('Backup downloaded')}catch(e){toast('Download blocked here – use Copy instead')}};
-  $('#bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(data());toast('Backup copied')}catch(e){$('#bText').value=data();$('#bText').select();toast('Select-all and copy the text box')}};
-  const restore=txt=>{try{const d=JSON.parse(txt);if(!d.notebooks||!d.notes)throw 0;S=Object.assign({tasks:[],events:[]},d);save();closeModal();selNote=null;filterNb=null;render();toast('Restored!')}catch(e){toast('That backup could not be read')}};
-  $('#bFile').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(restore)};
-  $('#bRestore').onclick=()=>{if($('#bText').value.trim())restore($('#bText').value)};
-}
-
-/* ---------- actions ---------- */
-function newNote(){const nb=filterNb||S.notebooks[0].id;const n={id:uid(),nb,title:'',body:'',pinned:false,updated:Date.now()};S.notes.push(n);selNote=n.id;query='';$('#search').value='';save();go('notes');setTimeout(()=>$('#edTitle')?.focus(),20)}
-$('#newNoteBtn').onclick=newNote;
-$('#search').oninput=e=>{query=e.target.value;if(view!=='notes')go('notes');else renderNotes()};
-$('#backupBtn').onclick=backupModal;
-$('#lockBtn').onclick=lockNow;
-$('#quickTask').onkeydown=e=>{if(e.key==='Enter'&&e.target.value.trim()){S.tasks.push({id:uid(),title:e.target.value.trim(),col:'todo',nb:S.notebooks[0].id});e.target.value='';save();render();$('#quickTask').focus()}};
-$('#quickEvent').onclick=()=>{const h=Math.min(Math.max(new Date().getHours()+1,7),22);eventModal(null,iso(new Date()),h)};
-$('#themeBtn').onclick=()=>{const r=document.documentElement,t=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=t;
-  try{localStorage.setItem('rymeNotes.theme2',t)}catch(e){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#050b1d':'#6c5ce7';render()};
-$('#prevWk').onclick=()=>{weekOffset--;render()};$('#nextWk').onclick=()=>{weekOffset++;render()};$('#thisWk').onclick=()=>{weekOffset=0;render()};
-
-document.addEventListener('click',e=>{
-  const t=e.target;let el;
-  if(el=t.closest('[data-editnb]')){e.stopPropagation();notebookModal(el.dataset.editnb);return}
-  if(el=t.closest('[data-donetask]')){const tk=S.tasks.find(x=>x.id===el.dataset.donetask);if(tk){S.tasks=S.tasks.filter(x=>x!==tk);tk.col='done';S.tasks.push(tk);save();render();toast('Nice! Task done ✓')}return}
-  if(el=t.closest('[data-deltask]')){S.tasks=S.tasks.filter(x=>x.id!==el.dataset.deltask);save();render();return}
-  if(el=t.closest('.nav[data-view]')){filterNb=null;go(el.dataset.view);return}
-  if(el=t.closest('[data-go]')){filterNb=null;go(el.dataset.go);return}
-  if(el=t.closest('[data-nb]')){filterNb=el.dataset.nb;selNote=null;go('notes');return}
-  if(t.closest('#addNbSide,#addNbCard')){notebookModal();return}
-  if(el=t.closest('[data-note]')){selNote=el.dataset.note;if(view!=='notes'){filterNb=null;go('notes')}else renderNotes();return}
-  if(el=t.closest('.ev')){eventModal(S.events.find(x=>x.id===el.dataset.ev));return}
-  if(el=t.closest('.cell')){eventModal(null,el.dataset.day,+el.dataset.hour);return}
-});
-document.addEventListener('keydown',e=>{
-  const i=e.target;if(i.dataset&&i.dataset.addcol&&e.key==='Enter'&&i.value.trim()){
-    const nb=filterNb||S.notebooks[0].id;S.tasks.push({id:uid(),title:i.value.trim(),col:i.dataset.addcol,nb});save();const k=i.dataset.addcol;render();
-    document.querySelector(`[data-addcol="${k}"]`)?.focus()}
-  if(S&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='n'&&!$('#modal').classList.contains('open')){e.preventDefault();newNote()}
-});
-/* drag & drop */
-let dragId=null;
-document.addEventListener('dragstart',e=>{const t=e.target.closest?.('.task');if(t){dragId=t.dataset.task;t.classList.add('dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',dragId)}catch(_){}}});
-document.addEventListener('dragend',e=>{document.querySelectorAll('.dragging,.over').forEach(x=>x.classList.remove('dragging','over'))});
-document.addEventListener('dragover',e=>{const c=e.target.closest?.('.col');if(c&&dragId){e.preventDefault();document.querySelectorAll('.over').forEach(x=>x!==c&&x.classList.remove('over'));c.classList.add('over')}});
-document.addEventListener('drop',e=>{const c=e.target.closest?.('.col');if(c&&dragId){e.preventDefault();const t=S.tasks.find(x=>x.id===dragId);
-  if(t){S.tasks=S.tasks.filter(x=>x!==t);t.col=c.dataset.col;S.tasks.push(t);save();render();if(t.col==='done')toast('Nice! Task done ✓')}}dragId=null});
-
-function purgeEmpty(){const keep=view==='notes'?selNote:null;const before=S.notes.length;
-  S.notes=S.notes.filter(n=>n.id===keep||n.title.trim()||n.body.trim());if(S.notes.length!==before)save()}
-function render(){if(!S)return;purgeEmpty();renderSide();
-  if(view==='home'){renderDash();renderCards();renderRecent()}
-  if(view==='notes')renderNotes();
-  if(view==='board')renderBoard($('#boardFull'),false);
-  if(view==='planner')renderGrid($('#gridFull'),weekOffset,false);
-}
-window.addEventListener('resize',()=>{if(view==='home'||view==='planner')render()});
-setInterval(()=>{if(view==='home'||view==='planner')render()},60000);
-lockUI(readEnc()?'unlock':'create');
-
-/* desktop install (works when hosted on https, e.g. GitHub Pages) */
-if('serviceWorker' in navigator&&location.protocol==='https:'&&!/claude/.test(location.hostname)){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
-</script>
+<script src="app.js"></script>
 </body>
 </html>
