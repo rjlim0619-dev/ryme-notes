@@ -165,6 +165,22 @@ h2{font-size:19px;font-weight:700}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .hint{font-size:12px;color:var(--muted)}
 .view{display:none}.view.on{display:block}
+/* lock screen */
+.lock{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 30% 20%,#13265e 0%,#060f28 45%,#02060f 100%)}
+.lock.hide{display:none}
+.lockcard{width:360px;max-width:92vw;background:rgba(10,22,49,.85);border:1px solid #1c2e5c;border-radius:24px;padding:34px 30px;
+  display:flex;flex-direction:column;align-items:center;gap:12px;color:#e8edff;box-shadow:0 30px 80px rgba(0,0,0,.5);backdrop-filter:blur(10px)}
+.lockcard .orb{width:62px;height:62px;margin-bottom:6px;box-shadow:0 0 34px rgba(120,110,255,.7)}
+.lockcard h2{font-size:21px}
+.lockcard p{font-size:13px;color:#8e9cc4;text-align:center;line-height:1.5}
+.lockcard input{width:100%;background:#060f26;border:1px solid #1c2e5c;border-radius:12px;padding:12px 14px;color:#e8edff;font-size:15px;outline:none}
+.lockcard input:focus{border-color:#6d7dff}
+.lockcard .primary{width:100%;padding:12px;font-size:14px;margin-top:4px}
+.lockcard .err{color:#ff7a93;font-size:12.5px;min-height:16px}
+.lockcard .link{font-size:12px;color:#7f8db5;text-decoration:underline;margin-top:4px}
+.lockcard .who{font-size:13px;color:#aab6da;display:flex;align-items:center;gap:8px}
+.shake{animation:shake .35s}@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 
 /* theme switch */
 .themesw{display:flex;align-items:center;gap:12px;padding:10px 24px;font-size:14px;color:#4b5064;width:100%;text-align:left}
@@ -226,6 +242,7 @@ html[data-theme=dark] ::-webkit-scrollbar-track{background:transparent}
     <div class="navlabel">Notebooks</div>
     <div id="nbNav"></div>
     <div class="grow"></div>
+    <button class="nav" id="lockBtn"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span class="lbl">Lock</span></button>
     <button class="themesw" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span class="lbl">Dark mode</span><span class="knob"></span></button>
     <button class="nav" id="backupBtn"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg><span class="lbl">Backup / Restore</span></button>
     <div style="height:14px"></div>
@@ -278,6 +295,7 @@ html[data-theme=dark] ::-webkit-scrollbar-track{background:transparent}
 <!-- modals -->
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
+<div class="lock" id="lock"><form class="lockcard" id="lockForm" autocomplete="off"></form></div>
 
 <script>
 const COLORS=['purple','blue','yellow','pink','green','slate'];
@@ -310,10 +328,62 @@ function seed(){
     ],
     events:[]};
 }
-let S;
-try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!S||!S.notebooks)S=seed();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+/* ---------- encrypted storage + login ---------- */
+const EKEY='rymeNotes.enc.v1';
+let S=null,CK=null,saveT=null;
+const te=new TextEncoder(),td=new TextDecoder();
+const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u)));
+const ub64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function deriveKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+let SALT=null;
+async function writeEnc(){if(!CK)return;const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},CK,te.encode(JSON.stringify(S)));
+  try{localStorage.setItem(EKEY,JSON.stringify({v:1,salt:b64(SALT),iv:b64(iv),ct:b64(ct)}))}catch(e){toast('Could not save!')}}
+function save(){clearTimeout(saveT);saveT=setTimeout(writeEnc,250)}
+window.addEventListener('beforeunload',()=>{if(saveT){clearTimeout(saveT);writeEnc()}});
+const readEnc=()=>{try{return JSON.parse(localStorage.getItem(EKEY))}catch(e){return null}};
+
+function lockUI(mode,msg){
+  const f=$('#lockForm');$('#lock').classList.remove('hide');
+  const head='<div class="orb"></div>';
+  if(mode==='create')f.innerHTML=head+`<h2>Create your password</h2><p>Only someone with this password can open Ryme Notes on this computer. Your notes get encrypted with it.</p>
+    <input type="password" id="pw1" placeholder="New password (at least 6 characters)" autocomplete="new-password">
+    <input type="password" id="pw2" placeholder="Type it again" autocomplete="new-password">
+    <div class="err" id="lerr">${msg||''}</div><button class="primary" type="submit">Set password</button>
+    <p style="font-size:11.5px">There is no "forgot password". If you forget it, your notes can't be recovered, so pick one you'll remember.</p>`;
+  else if(mode==='unlock')f.innerHTML=head+`<h2>Ryme Notes</h2><div class="who"><span class="avatar" style="width:26px;height:26px;font-size:10px">RJ</span>Ryan James Lim</div>
+    <input type="password" id="pw1" placeholder="Password" autocomplete="current-password">
+    <div class="err" id="lerr">${msg||''}</div><button class="primary" type="submit">Unlock</button>
+    <button class="link" type="button" id="forgot">Forgot password?</button>`;
+  else if(mode==='reset')f.innerHTML=head+`<h2>Erase and start over?</h2><p>Without the password your notes can't be opened. This deletes everything saved in Ryme Notes on this computer and lets you set a new password.</p>
+    <input id="pw1" placeholder='Type ERASE to confirm'><div class="err" id="lerr"></div>
+    <button class="primary" type="submit" style="background:#e5546e">Erase everything</button><button class="link" type="button" id="back">Go back</button>`;
+  f.dataset.mode=mode;setTimeout(()=>$('#pw1')?.focus(),30);
+  $('#forgot')&&($('#forgot').onclick=()=>lockUI('reset'));$('#back')&&($('#back').onclick=()=>lockUI('unlock'));
+}
+function fail(m){$('#lerr').textContent=m;const f=$('#lockForm');f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake')}
+$('#lockForm').onsubmit=async e=>{e.preventDefault();const mode=e.target.dataset.mode,pw=$('#pw1').value;
+  if(mode==='create'){
+    if(pw.length<6)return fail('Use at least 6 characters.');if(pw!==$('#pw2').value)return fail("Passwords don't match.");
+    let old=null;try{old=JSON.parse(localStorage.getItem(KEY))}catch(_){}
+    S=(old&&old.notebooks)?old:seed();SALT=crypto.getRandomValues(new Uint8Array(16));CK=await deriveKey(pw,SALT);
+    await writeEnc();try{localStorage.removeItem(KEY)}catch(_){}unlocked();toast('Password set 🔒');
+  }else if(mode==='unlock'){
+    const d=readEnc();$('#lerr').textContent='Checking…';
+    try{SALT=ub64(d.salt);const k=await deriveKey(pw,SALT);
+      const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(d.iv)},k,ub64(d.ct));S=JSON.parse(td.decode(pt));CK=k;unlocked()}
+    catch(_){fail('Wrong password.');$('#pw1').value='';$('#pw1').focus()}
+  }else if(mode==='reset'){
+    if(pw.trim().toUpperCase()!=='ERASE')return fail('Type ERASE to confirm.');
+    try{localStorage.removeItem(EKEY);localStorage.removeItem(KEY)}catch(_){}lockUI('create');
+  }};
+function unlocked(){$('#lock').classList.add('hide');$('#lockForm').innerHTML='';view='home';selNote=null;filterNb=null;go('home');bumpIdle()}
+function lockNow(){if(saveT){clearTimeout(saveT);writeEnc()}S=null;CK=null;closeModal();
+  document.querySelectorAll('#nbCards,#boardMini,#recent,#gridMini,#noteList,#editor,#boardFull,#gridFull,#nbNav').forEach(x=>x.innerHTML='');lockUI('unlock')}
+/* auto-lock after 15 minutes of no activity */
+let idleT;function bumpIdle(){clearTimeout(idleT);if(CK)idleT=setTimeout(lockNow,15*60*1000)}
+['mousemove','keydown','click','scroll'].forEach(ev=>document.addEventListener(ev,bumpIdle,{passive:true}));
 
 let view='home',selNote=null,filterNb=null,weekOffset=0,query='';
 const nbById=id=>S.notebooks.find(n=>n.id===id);
@@ -466,7 +536,7 @@ function eventModal(ev,day,hour){
   if($('#eDel'))$('#eDel').onclick=()=>{S.events=S.events.filter(x=>x!==ev);save();closeModal();render()};
 }
 function backupModal(){
-  openModal(`<h3>Backup / Restore</h3><p class="hint">Your notes are saved in this browser automatically. Make a backup file now and then, so you can restore them on another computer or after clearing your browser.</p>
+  openModal(`<h3>Backup / Restore</h3><p class="hint">Your notes are saved in this browser automatically. Make a backup file now and then, so you can restore them on another computer or after clearing your browser. Note: the backup file is not password-protected, so keep it somewhere private.</p>
     <button class="primary" id="bDown">Download backup file</button><button class="ghost" id="bCopy">Copy backup as text</button>
     <label>Restore from a backup file<input type="file" id="bFile" accept=".json,application/json"></label>
     <label>…or paste backup text<textarea id="bText" rows="3" placeholder="Paste here, then press Restore"></textarea></label>
@@ -485,6 +555,7 @@ function newNote(){const nb=filterNb||S.notebooks[0].id;const n={id:uid(),nb,tit
 $('#newNoteBtn').onclick=newNote;
 $('#search').oninput=e=>{query=e.target.value;if(view!=='notes')go('notes');else renderNotes()};
 $('#backupBtn').onclick=backupModal;
+$('#lockBtn').onclick=lockNow;
 $('#themeBtn').onclick=()=>{const r=document.documentElement,t=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=t;
   try{localStorage.setItem('rymeNotes.theme2',t)}catch(e){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#050b1d':'#6c5ce7';render()};
 $('#prevWk').onclick=()=>{weekOffset--;render()};$('#nextWk').onclick=()=>{weekOffset++;render()};$('#thisWk').onclick=()=>{weekOffset=0;render()};
@@ -505,7 +576,7 @@ document.addEventListener('keydown',e=>{
   const i=e.target;if(i.dataset&&i.dataset.addcol&&e.key==='Enter'&&i.value.trim()){
     const nb=filterNb||S.notebooks[0].id;S.tasks.push({id:uid(),title:i.value.trim(),col:i.dataset.addcol,nb});save();const k=i.dataset.addcol;render();
     document.querySelector(`[data-addcol="${k}"]`)?.focus()}
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='n'&&!$('#modal').classList.contains('open')){e.preventDefault();newNote()}
+  if(S&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='n'&&!$('#modal').classList.contains('open')){e.preventDefault();newNote()}
 });
 /* drag & drop */
 let dragId=null;
@@ -515,7 +586,7 @@ document.addEventListener('dragover',e=>{const c=e.target.closest?.('.col');if(c
 document.addEventListener('drop',e=>{const c=e.target.closest?.('.col');if(c&&dragId){e.preventDefault();const t=S.tasks.find(x=>x.id===dragId);
   if(t){S.tasks=S.tasks.filter(x=>x!==t);t.col=c.dataset.col;S.tasks.push(t);save();render();if(t.col==='done')toast('Nice! Task done ✓')}}dragId=null});
 
-function render(){renderSide();
+function render(){if(!S)return;renderSide();
   if(view==='home'){renderCards();renderBoard($('#boardMini'),true);renderRecent();renderGrid($('#gridMini'),0,true)}
   if(view==='notes')renderNotes();
   if(view==='board')renderBoard($('#boardFull'),false);
@@ -523,7 +594,7 @@ function render(){renderSide();
 }
 window.addEventListener('resize',()=>{if(view==='home'||view==='planner')render()});
 setInterval(()=>{if(view==='home'||view==='planner')render()},60000);
-render();
+lockUI(readEnc()?'unlock':'create');
 
 /* desktop install (works when hosted on https, e.g. GitHub Pages) */
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!/claude/.test(location.hostname)){try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
