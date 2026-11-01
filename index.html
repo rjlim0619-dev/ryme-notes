@@ -140,6 +140,46 @@ h2{font-size:19px;font-weight:700}
 .pinbtn{font-size:18px;color:var(--soft)}.pinbtn.on{color:#f7b42c}
 .del{color:#e5546e;font-size:12px;margin-left:auto}
 
+/* dashboard */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left;transition:transform .15s}
+.stat:hover{transform:translateY(-2px)}
+.stat .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex-shrink:0}
+.stat .ic svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:1.9}
+.stat b{font-size:24px;display:block;line-height:1.1}
+.stat span{font-size:12px;color:var(--muted)}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;min-width:0}
+.phead{display:flex;align-items:center;margin-bottom:10px}.phead h2{flex:1;font-size:16px}
+.ghost.sm{padding:5px 12px;font-size:12px;background:transparent}
+.trow{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:10px;font-size:13.5px}
+.trow:hover{background:rgba(120,130,200,.08)}
+.chk{width:20px;height:20px;border-radius:6px;border:2px solid var(--soft);flex-shrink:0;display:grid;place-items:center;cursor:pointer;transition:.15s}
+.chk:hover{border-color:var(--green);background:rgba(79,198,138,.15)}
+.chk svg{width:12px;height:12px;stroke:var(--green);fill:none;stroke-width:3;opacity:0}.chk:hover svg{opacity:1}
+.trow .tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{font-size:10.5px;font-weight:600;border-radius:8px;padding:3px 8px;flex-shrink:0}
+.chip.todo{background:rgba(124,156,246,.18);color:#7c9cf6}.chip.doing{background:rgba(253,197,74,.18);color:#e9a92a}.chip.review{background:rgba(247,122,214,.18);color:#e66bc4}
+.ndot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.erow{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:10px;cursor:pointer;font-size:13.5px}
+.erow:hover{background:rgba(120,130,200,.08)}
+.erow .tm{font-size:12px;color:var(--muted);width:92px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.erow .bar2{width:4px;align-self:stretch;border-radius:4px;flex-shrink:0}
+.erow.now{background:rgba(109,125,255,.12)}
+.erow.past{opacity:.5}
+.emptyp{padding:22px 8px;text-align:center;color:var(--muted);font-size:13px}
+.quick{margin-top:auto;width:100%;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:13px;outline:none;background:transparent;color:var(--text);text-align:left}
+.quick:focus{border-style:solid;border-color:var(--brand)}
+.qbtn{color:var(--muted)}.qbtn:hover{color:var(--brand);border-color:var(--brand)}
+#taskList,#todayList{margin-bottom:10px;min-height:120px}
+.nrow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;cursor:pointer}
+.nrow:hover{background:rgba(120,130,200,.08)}
+.nrow .nt{flex:1;min-width:0}
+.nrow b{font-size:13.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nrow p{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.nrow .nm{font-size:11.5px;color:var(--muted);flex-shrink:0;text-align:right}
+.cards .nb{min-height:88px}
+@media (max-width:1100px){.stats{grid-template-columns:repeat(2,1fr)}.duo{grid-template-columns:1fr}}
 /* recent notes on dashboard */
 .recent{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
 .rnote{background:#fff;border-radius:var(--radius);padding:16px;cursor:pointer;border-top:4px solid var(--brand);min-height:120px}
@@ -258,13 +298,24 @@ html[data-theme=dark] ::-webkit-scrollbar-track{background:transparent}
 
     <!-- HOME -->
     <section class="view on" id="v-home">
+      <p class="hint" id="todayLine" style="margin:-8px 0 18px;font-size:13px"></p>
+      <div class="stats" id="stats"></div>
+      <div class="duo">
+        <div class="panel">
+          <div class="phead"><h2>My Tasks</h2><button class="ghost sm" data-go="board">Open board →</button></div>
+          <div id="taskList"></div>
+          <input class="quick" id="quickTask" placeholder="+ Add a task and press Enter">
+        </div>
+        <div class="panel">
+          <div class="phead"><h2>Today's Schedule</h2><button class="ghost sm" data-go="planner">Open planner →</button></div>
+          <div id="todayList"></div>
+          <button class="quick qbtn" id="quickEvent">+ Add to today's schedule</button>
+        </div>
+      </div>
+      <div class="sechead"><h2>Notebooks</h2></div>
       <div class="cards" id="nbCards"></div>
-      <div class="sechead"><h2>Task Board</h2><button class="ghost" data-go="board">Open board</button></div>
-      <div class="board" id="boardMini"></div>
-      <div class="sechead"><h2>Recent Notes</h2><button class="ghost" data-go="notes">All notes</button></div>
-      <div class="recent" id="recent"></div>
-      <div class="sechead"><h2>This Week</h2><button class="ghost" data-go="planner">Open planner</button></div>
-      <div class="planner"><div class="grid" id="gridMini"></div></div>
+      <div class="sechead"><h2>Recent Notes</h2><button class="ghost sm" data-go="notes">All notes →</button></div>
+      <div class="panel" style="padding:6px"><div id="recent"></div></div>
     </section>
 
     <!-- NOTES -->
@@ -387,7 +438,7 @@ $('#lockForm').onsubmit=async e=>{e.preventDefault();const mode=e.target.dataset
   }};
 function unlocked(){$('#lock').classList.add('hide');$('#lockForm').innerHTML='';view='home';selNote=null;filterNb=null;go('home');bumpIdle()}
 function lockNow(){if(saveT){clearTimeout(saveT);writeEnc()}S=null;CK=null;closeModal();
-  document.querySelectorAll('#nbCards,#boardMini,#recent,#gridMini,#noteList,#editor,#boardFull,#gridFull,#nbNav').forEach(x=>x.innerHTML='');lockUI('unlock')}
+  document.querySelectorAll('#nbCards,#stats,#taskList,#todayList,#todayLine,#recent,#noteList,#editor,#boardFull,#gridFull,#nbNav').forEach(x=>x.innerHTML='');lockUI('unlock')}
 /* auto-lock after 15 minutes of no activity */
 let idleT;function bumpIdle(){clearTimeout(idleT);if(CK)idleT=setTimeout(lockNow,15*60*1000)}
 ['mousemove','keydown','click','scroll'].forEach(ev=>document.addEventListener(ev,bumpIdle,{passive:true}));
@@ -401,7 +452,7 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');cl
 
 function go(v){view=v;document.querySelectorAll('.nav[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===v&&!(v==='notes'&&filterNb)));
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
-  $('#pageTitle').textContent={home:'Dashboard',notes:filterNb?(nbById(filterNb)?.name||'Notes'):'Notes',board:'Task Board',planner:'Planner'}[v];
+  $('#pageTitle').textContent={home:greet()+', Ryan 👋',notes:filterNb?(nbById(filterNb)?.name||'Notes'):'Notes',board:'Task Board',planner:'Planner'}[v];
   render()}
 
 /* ---------- sidebar & cards ---------- */
@@ -415,7 +466,7 @@ function renderCards(){
     const notes=S.notes.filter(x=>x.nb===n.id).length;
     const t=S.tasks.filter(x=>x.nb===n.id);const pct=t.length?Math.round(t.filter(x=>x.col==='done').length/t.length*100):0;
     return `<div class="nb c-${n.color}" data-nb="${n.id}">
-      <div class="meta"><span class="pill">${notes} note${notes===1?'':'s'}</span><span>${t.length?pct+'% tasks done':''}</span></div>
+      <div class="meta"><span class="pill">${notes} note${notes===1?'':'s'}</span>${t.length?`<span>${t.filter(x=>x.col==='done').length}/${t.length} tasks done</span>`:''}</div>
       <b>${esc(n.name)}</b><small>${esc(n.desc||'')}</small>
       <button class="menu" data-editnb="${n.id}" title="Edit notebook">⋮</button>
       <div class="bar"><i style="width:${Math.max(pct,8)}%"></i></div></div>`}).join('')+
@@ -466,9 +517,39 @@ function renderNotes(){
   $('#edPin').onclick=()=>{n.pinned=!n.pinned;touch();render()};
   $('#edDel').onclick=()=>confirmBox('Delete this note?',()=>{S.notes=S.notes.filter(x=>x!==n);selNote=null;save();render();toast('Note deleted')});
 }
+const STLBL={todo:'To Do',doing:'In Progress',review:'Review'};
+function greet(){const h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
+function renderDash(){
+  const today=iso(new Date()),nowH=new Date().getHours()+new Date().getMinutes()/60;
+  const open=S.tasks.filter(t=>t.col!=='done'),done=S.tasks.filter(t=>t.col==='done').length;
+  const todays=S.events.filter(e=>e.day===today).sort((a,b)=>a.start-b.start);
+  const next=todays.find(e=>e.end>nowH);
+  $('#todayLine').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+
+    (next?` · Next: ${next.title} at ${fmtH(next.start)}`:'');
+  const ic={notes:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7"/>',todo:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/>',
+    done:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'};
+  const tile=(go,c,svg,n,l)=>`<button class="stat" data-go="${go}"><span class="ic" style="background:${c}"><svg viewBox="0 0 24 24">${svg}</svg></span><span><b>${n}</b><span>${l}</span></span></button>`;
+  $('#stats').innerHTML=tile('notes','linear-gradient(135deg,#b98cfa,#8e5cf0)',ic.notes,S.notes.length,'Notes')+
+    tile('board','linear-gradient(135deg,#94b0fa,#4a7cf0)',ic.todo,open.length,'Tasks to do')+
+    tile('board','linear-gradient(135deg,#7fdcab,#2fa86c)',ic.done,done,'Tasks done')+
+    tile('planner','linear-gradient(135deg,#fdd060,#fb9a2c)',ic.cal,todays.length,"Today's events");
+  const ord={doing:0,review:1,todo:2};
+  $('#taskList').innerHTML=open.sort((a,b)=>ord[a.col]-ord[b.col]).slice(0,7).map(t=>`<div class="trow">
+      <span class="chk" data-donetask="${t.id}" title="Mark as done"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>
+      <span class="tt" title="${esc(t.title)}">${esc(t.title)}</span>
+      <span class="ndot" title="${esc(nbById(t.nb)?.name||'')}" style="background:${HEX[nbColor(t.nb)]}"></span>
+      <span class="chip ${t.col}">${STLBL[t.col]}</span></div>`).join('')+(open.length>7?`<p class="hint" style="padding:4px 8px">+${open.length-7} more on the board</p>`:'')
+    ||'<div class="emptyp">🎉 All caught up! Add a task below.</div>';
+  $('#todayList').innerHTML=todays.map(e=>`<div class="erow ${e.end<=nowH?'past':e.start<=nowH?'now':''}" data-ev="${e.id}">
+      <span class="bar2" style="background:${HEX[e.color]}"></span><span class="tm">${fmtH(e.start)} – ${fmtH(e.end)}</span>
+      <span class="tt" style="flex:1">${esc(e.title)}</span>${e.start<=nowH&&e.end>nowH?'<span class="chip todo">Now</span>':''}</div>`).join('')
+    ||'<div class="emptyp">Nothing scheduled today.</div>';
+}
 function renderRecent(){
-  const r=[...S.notes].sort((a,b)=>(b.pinned-a.pinned)||(b.updated-a.updated)).slice(0,4);
-  $('#recent').innerHTML=r.map(n=>`<div class="rnote" data-note="${n.id}" style="border-top-color:${HEX[nbColor(n.nb)]}"><b>${n.pinned?'★ ':''}${esc(n.title||'Untitled')}</b><p>${esc(n.body)}</p><div class="hint" style="margin-top:8px;font-size:11px">${esc(nbById(n.nb)?.name||'')} · ${ago(n.updated)}</div></div>`).join('')||'<p class="hint">No notes yet.</p>';
+  const r=[...S.notes].sort((a,b)=>(b.pinned-a.pinned)||(b.updated-a.updated)).slice(0,5);
+  $('#recent').innerHTML=r.map(n=>`<div class="nrow" data-note="${n.id}"><span class="ndot" style="background:${HEX[nbColor(n.nb)]};width:10px;height:10px"></span>
+    <div class="nt"><b>${n.pinned?'★ ':''}${esc(n.title||'Untitled')}</b><p>${esc(n.body.replace(/\s+/g,' ').trim()||'Empty note')}</p></div>
+    <span class="nm">${esc(nbById(n.nb)?.name||'')}<br>${ago(n.updated)}</span></div>`).join('')||'<div class="emptyp">No notes yet. Press <b>+ New note</b> to write one.</div>';
 }
 
 /* ---------- planner ---------- */
@@ -563,6 +644,8 @@ $('#newNoteBtn').onclick=newNote;
 $('#search').oninput=e=>{query=e.target.value;if(view!=='notes')go('notes');else renderNotes()};
 $('#backupBtn').onclick=backupModal;
 $('#lockBtn').onclick=lockNow;
+$('#quickTask').onkeydown=e=>{if(e.key==='Enter'&&e.target.value.trim()){S.tasks.push({id:uid(),title:e.target.value.trim(),col:'todo',nb:S.notebooks[0].id});e.target.value='';save();render();$('#quickTask').focus()}};
+$('#quickEvent').onclick=()=>{const h=Math.min(Math.max(new Date().getHours()+1,7),22);eventModal(null,iso(new Date()),h)};
 $('#themeBtn').onclick=()=>{const r=document.documentElement,t=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=t;
   try{localStorage.setItem('rymeNotes.theme2',t)}catch(e){}document.querySelector('meta[name=theme-color]').content=t==='dark'?'#050b1d':'#6c5ce7';render()};
 $('#prevWk').onclick=()=>{weekOffset--;render()};$('#nextWk').onclick=()=>{weekOffset++;render()};$('#thisWk').onclick=()=>{weekOffset=0;render()};
@@ -570,6 +653,7 @@ $('#prevWk').onclick=()=>{weekOffset--;render()};$('#nextWk').onclick=()=>{weekO
 document.addEventListener('click',e=>{
   const t=e.target;let el;
   if(el=t.closest('[data-editnb]')){e.stopPropagation();notebookModal(el.dataset.editnb);return}
+  if(el=t.closest('[data-donetask]')){const tk=S.tasks.find(x=>x.id===el.dataset.donetask);if(tk){S.tasks=S.tasks.filter(x=>x!==tk);tk.col='done';S.tasks.push(tk);save();render();toast('Nice! Task done ✓')}return}
   if(el=t.closest('[data-deltask]')){S.tasks=S.tasks.filter(x=>x.id!==el.dataset.deltask);save();render();return}
   if(el=t.closest('.nav[data-view]')){filterNb=null;go(el.dataset.view);return}
   if(el=t.closest('[data-go]')){filterNb=null;go(el.dataset.go);return}
@@ -593,8 +677,10 @@ document.addEventListener('dragover',e=>{const c=e.target.closest?.('.col');if(c
 document.addEventListener('drop',e=>{const c=e.target.closest?.('.col');if(c&&dragId){e.preventDefault();const t=S.tasks.find(x=>x.id===dragId);
   if(t){S.tasks=S.tasks.filter(x=>x!==t);t.col=c.dataset.col;S.tasks.push(t);save();render();if(t.col==='done')toast('Nice! Task done ✓')}}dragId=null});
 
-function render(){if(!S)return;renderSide();
-  if(view==='home'){renderCards();renderBoard($('#boardMini'),true);renderRecent();renderGrid($('#gridMini'),0,true)}
+function purgeEmpty(){const keep=view==='notes'?selNote:null;const before=S.notes.length;
+  S.notes=S.notes.filter(n=>n.id===keep||n.title.trim()||n.body.trim());if(S.notes.length!==before)save()}
+function render(){if(!S)return;purgeEmpty();renderSide();
+  if(view==='home'){renderDash();renderCards();renderRecent()}
   if(view==='notes')renderNotes();
   if(view==='board')renderBoard($('#boardFull'),false);
   if(view==='planner')renderGrid($('#gridFull'),weekOffset,false);
