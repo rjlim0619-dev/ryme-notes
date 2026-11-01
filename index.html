@@ -342,7 +342,7 @@ const normEmail=e=>e.trim().toLowerCase();
 async function emailOk(e){const h=await crypto.subtle.digest('SHA-256',te.encode(normEmail(e)));return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')===OWNER_HASH}
 async function writeEnc(){if(!CK)return;const iv=crypto.getRandomValues(new Uint8Array(12));
   const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},CK,te.encode(JSON.stringify(S)));
-  try{localStorage.setItem(EKEY,JSON.stringify({v:2,salt:b64(SALT),iv:b64(iv),ct:b64(ct)}))}catch(e){toast('Could not save!')}}
+  try{localStorage.setItem(EKEY,JSON.stringify({v:3,salt:b64(SALT),iv:b64(iv),ct:b64(ct)}))}catch(e){toast('Could not save!')}}
 function save(){clearTimeout(saveT);saveT=setTimeout(writeEnc,250)}
 window.addEventListener('beforeunload',()=>{if(saveT){clearTimeout(saveT);writeEnc()}});
 const readEnc=()=>{try{return JSON.parse(localStorage.getItem(EKEY))}catch(e){return null}};
@@ -350,14 +350,13 @@ const readEnc=()=>{try{return JSON.parse(localStorage.getItem(EKEY))}catch(e){re
 function lockUI(mode,msg){
   const f=$('#lockForm');$('#lock').classList.remove('hide');
   const head='<div class="orb"></div>';
-  if(mode==='create')f.innerHTML=head+`<h2>Create your password</h2><p>Only your Gmail with this password can open Ryme Notes on this computer. Your notes get encrypted with it.</p>
-    <input type="email" id="em" placeholder="Gmail" autocomplete="username">
+  if(mode==='create')f.innerHTML=head+`<h2>Create your password</h2><p>Only someone with this password can open Ryme Notes on this computer. Your notes get encrypted with it.</p>
     <input type="password" id="pw1" placeholder="New password (at least 6 characters)" autocomplete="new-password">
     <input type="password" id="pw2" placeholder="Type it again" autocomplete="new-password">
     <div class="err" id="lerr">${msg||''}</div><button class="primary" type="submit">Set password</button>
     <p style="font-size:11.5px">There is no "forgot password". If you forget it, your notes can't be recovered, so pick one you'll remember.</p>`;
   else if(mode==='unlock')f.innerHTML=head+`<h2>Ryme Notes</h2><div class="who"><span class="avatar" style="width:26px;height:26px;font-size:10px">RJ</span>Ryan James Lim</div>
-    <input type="email" id="em" placeholder="Gmail" autocomplete="username">
+    ${(readEnc()||{}).v===2?'<input type="email" id="em" placeholder="Gmail (one last time)">':''}
     <input type="password" id="pw1" placeholder="Password" autocomplete="current-password">
     <div class="err" id="lerr">${msg||''}</div><button class="primary" type="submit">Unlock</button>
     <button class="link" type="button" id="forgot">Forgot password?</button>`;
@@ -370,17 +369,17 @@ function lockUI(mode,msg){
 function fail(m){$('#lerr').textContent=m;const f=$('#lockForm');f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake')}
 $('#lockForm').onsubmit=async e=>{e.preventDefault();const mode=e.target.dataset.mode,pw=$('#pw1').value;
   const em=$('#em')?$('#em').value:'';
-  if((mode==='create'||mode==='unlock')&&!(await emailOk(em)))return fail('This Gmail is not allowed.');
+  if($('#em')&&!(await emailOk(em)))return fail('This Gmail is not allowed.');
   if(mode==='create'){
     if(pw.length<6)return fail('Use at least 6 characters.');if(pw!==$('#pw2').value)return fail("Passwords don't match.");
     let old=null;try{old=JSON.parse(localStorage.getItem(KEY))}catch(_){}
-    S=(old&&old.notebooks)?old:seed();SALT=crypto.getRandomValues(new Uint8Array(16));CK=await deriveKey(normEmail(em)+'|'+pw,SALT);
+    S=(old&&old.notebooks)?old:seed();SALT=crypto.getRandomValues(new Uint8Array(16));CK=await deriveKey(pw,SALT);
     await writeEnc();try{localStorage.removeItem(KEY)}catch(_){}unlocked();toast('Password set 🔒');
   }else if(mode==='unlock'){
     const d=readEnc();$('#lerr').textContent='Checking…';
-    try{SALT=ub64(d.salt);const k=await deriveKey(d.v===1?pw:normEmail(em)+'|'+pw,SALT);
+    try{SALT=ub64(d.salt);const k=await deriveKey(d.v===2?normEmail(em)+'|'+pw:pw,SALT);
       const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(d.iv)},k,ub64(d.ct));S=JSON.parse(td.decode(pt));
-      if(d.v===1){CK=await deriveKey(normEmail(em)+'|'+pw,SALT);await writeEnc()}else CK=k;unlocked()}
+      if(d.v===2){CK=await deriveKey(pw,SALT);await writeEnc()}else CK=k;unlocked()}
     catch(_){fail('Wrong password.');$('#pw1').value='';$('#pw1').focus()}
   }else if(mode==='reset'){
     if(pw.trim().toUpperCase()!=='ERASE')return fail('Type ERASE to confirm.');
